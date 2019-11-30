@@ -1,0 +1,18 @@
+{
+    "name": "team29miniproject",
+    "description": "s381f team29 miniproject",
+    "author": "team29",
+    "version": "1.0.0",
+    "dependencies": {
+        "express": "*",
+        "mongodb": "3.1",
+        "ejs": "*",
+        "cookie-session": "*",
+        "body-parser": "*",
+        "mongoose": "*"
+    },
+    "engine": "node >= 0.10.0",
+    "scripts": {
+        "start": "node server"
+    }
+}
