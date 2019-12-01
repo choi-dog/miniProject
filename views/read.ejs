@@ -45,8 +45,7 @@
       
         <p>User:<%= name %></p>
         
-      <p>Showing 12 documents 
-      (criteria: {})</p>
+      <p>Showing <%= restaurants.length %> Restaurants </p>
       <a href='/logout'>Logout</a>
     </div>
     <div class="container-fluid">
@@ -63,9 +62,11 @@
             </tr>
           </thead>
           <tbody>
-            
-              
-              
+            <% for (var i = 0; i < restaurants.length; i++) { %>
+              <tr>
+                <td><a href=/display?_id=<%= restaurants[i]._id%>><%= restaurants[i].name %></a></td>   
+              </tr> 
+              <% } %>  
           </tbody>
         </table>
       </div>
