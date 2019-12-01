@@ -32,7 +32,7 @@ app.get('/', (req,res) => {
 	if (!req.session.authenticated) {
 		res.redirect('/login');
 	} else {
-		res.status(200).render('read',{name:req.session.id});
+		res.redirect('/read');
 	}
 });
 app.get('/login', (req,res) => {
@@ -115,7 +115,7 @@ app.post('/login', (req,res) => {
         if(err) throw err;
         console.log("wrong password");
         res.end();
-      }else{
+      }else{restaurant.
         console.log("login successful!");
         req.session.authenticated = true;
         req.session.id = userArray.name;
@@ -440,6 +440,61 @@ app.post('/change', (req,res) => {
     callback(result);
   });
 }*/
+app.get('/rate', (req,res) => {
+	res.render("rate.ejs");
+});
+app.post('/rate', (req,res) => {
+    let client = new MongoClient(mongourl);
+    client.connect((err) => {
+        try {
+          assert.equal(err,null);
+        } catch (err) {
+          res.status(500).end("MongoClient connect() failed!");
+        }
+        const db = client.db(dbName);
+        let new_r = {};
+        new_r['rate'] = req.body.rate
+        new_r['user'] = req.session.id
+        db.collection('restaurant2').count({ user: req.session.id })
+        .then((count) => {
+          if (count > 0) {
+            console.log('Username exists.');
+            res.write("You rated already, please return.");
+            res.end();
+          } else {
+            console.log('Username does not exist.');
+            insertRate(db,new_r,(result) => {
+              client.close();
+              res.status(200).end('User was inserted into MongoDB!');
+            });res.redirect('/read');
+          }
+        });
+
+});
+});
+function insertRate(db,r,callback) {  
+  db.collection('restaurant2').rate().insertOne(r,function(err,result) {
+      assert.equal(err,null);
+      console.log("insert was successful!");
+      console.log(result);
+      callback(result);
+    });
+  }
+
+app.get('/rate', (req,res) => {
+	res.render("leaflet.ejs");
+});
+
+
+app.get("/gmap", (req,res) => {
+	res.render("gmap.ejs", {
+		lat:req.query.lat,
+		lon:req.query.lon,
+		zoom:req.query.zoom ? req.query.zoom : 15
+	});
+	res.end();
+});
+
 app.get('/logout', (req,res) => {
 	req.session = null;
 	res.redirect('/');
