@@ -9,10 +9,11 @@
         "ejs": "*",
         "cookie-session": "*",
         "body-parser": "*",
-        "mongoose": "*"
+        "mongoose": "*",
+        "formidable": "latest"
     },
     "engine": "node >= 0.10.0",
     "scripts": {
-        "start": "node server"
+        "start": "node server.js"
     }
 }
