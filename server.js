@@ -115,7 +115,7 @@ app.post('/login', (req,res) => {
         if(err) throw err;
         console.log("wrong password");
         res.end();
-      }else{
+      }else{restaurant.
         console.log("login successful!");
         req.session.authenticated = true;
         req.session.id = userArray.name;
@@ -312,6 +312,30 @@ app.get('/change', (req, res) => {
   });
 });
 });
+app.post('/search', (req, res) => {    
+  let client = new MongoClient(mongourl);
+  client.connect((err) => {
+    try {
+      assert.equal(err,null);
+    } catch (err) {
+      res.status(500).end("MongoClient connect() failed!");
+    }      
+    console.log('Connected to MongoDB');
+    const db = client.db(dbName);
+    let criteria = {};
+    criteria['name'] = req.query.name;
+    findRestaurant(db,criteria,(restaurant) => {
+      client.close();
+      console.log('Disconnected MongoDB');
+      console.log('restaurant returned = ' + restaurant.length);
+      res.render("search.ejs",{
+      restaurant:restaurant
+      })   
+  });
+});
+});
+
+
 app.post('/change', (req,res) => {
   let form = new formidable.IncomingForm();
   form.parse(req, (err, fields, files) => {
@@ -440,9 +464,126 @@ app.post('/change', (req,res) => {
     callback(result);
   });
 }*/
+app.get('/remove', (req, res) => {    
+  let client = new MongoClient(mongourl);
+  client.connect((err) => {
+    try {
+      assert.equal(err,null);
+    } catch (err) {
+      res.status(500).end("MongoClient connect() failed!");
+    }      
+    console.log('Connected to MongoDB');
+    const db = client.db(dbName);
+    let criteria = {};
+    criteria['_id'] = ObjectID(req.query._id);
+    findRestaurant(db,criteria,(restaurant) => {
+      //let image = new Buffer.from(restaurant[0].image,'base64');     
+      //console.log(restaurant[0].mimetype);
+      //if (restaurant[0].mimetype.match(/^image/)) {
+      if(restaurant[0].owner == req.session.id){
+	   deleteRestaurants(db,() => {
+	   client.close();
+	   })  
+      }else{
+        res.end("You are not the onwer,please return.");
+      }
+       
+  });
+});
+});
+const deleteRestaurants = (db, callback) => {
+   db.collection('restaurant2').deleteOne(
+      { "_id" : restaurant[0]._id }, 
+      (err, results) => {
+         if (err) throw err;
+         console.log(results);
+         callback();
+      }
+   );
+};
+
+
+app.get('/rate', (req,res) => {
+	res.render("rate.ejs");
+});
+app.post('/rate', (req,res) => {
+    let client = new MongoClient(mongourl);
+    client.connect((err) => {
+        try {
+          assert.equal(err,null);
+        } catch (err) {
+          res.status(500).end("MongoClient connect() failed!");
+        }
+        const db = client.db(dbName);
+        let new_r = {};
+        new_r['rate'] = req.body.rate
+        new_r['user'] = req.session.id
+        db.collection('restaurant2').rate.count({ user: req.session.id })
+        .then((count) => {
+          if (count > 0) {
+            console.log('Username exists.');
+            res.write("You rated already, please return.");
+            res.end();
+          } else {
+            console.log('Username does not exist.');
+            insertRate(db,new_r,(result) => {
+              client.close();
+              res.status(200).end('User was inserted into MongoDB!');
+            });res.redirect('/read');
+          }
+        });
+
+});
+});
+function insertRate(db,r,callback) {  
+  db.collection('restaurant2').rate.insertOne(r,function(err,result) {
+      assert.equal(err,null);
+      console.log("insert was successful!");
+      console.log(result);
+      callback(result);
+    });
+  }
+
+app.get("/gmap", (req,res) => {
+	res.render("gmap.ejs", {
+		lat:req.query.lat,
+		lon:req.query.lon,
+		zoom:req.query.zoom ? req.query.zoom : 15
+	});
+	res.end();
+});
+app.get('/restaurant/:name/:borough/:cuisine', function(req,res) {
+	let r = new Restful(String(req.params.name), Number(req.params.borough), Number(req.params.cuisine));
+	if (req.headers['accept'] == 'application/json') {		
+		res.status(200).json(r);
+	} else {
+		res.status(200).render('result',{result:r});
+	}
+});
+class Restful {
+	constructor(n,b,c) {
+		this.name = n;
+		this.borough = b;
+		this.cuisine = c;
+	}
+}
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post('/restaurant', (req,res) => {
+    res.status(200).write('Recived POST request\n');
+    res.write(`Request body: ${JSON.stringify(req.body)}\n`);
+    res.write(`name: ${req.body.name}\n`);
+    res.write(`borough: ${req.body.borough}\n`);
+    res.end(`cuisine: ${req.body.cuisine}\n`);
+});
+
+
 app.get('/logout', (req,res) => {
 	req.session = null;
 	res.redirect('/');
 });
 
-app.listen(process.env.PORT || 3000);
+app.listen(3000, () => {
+    console.log(`App running at http://localhost:3000`)
+  })
