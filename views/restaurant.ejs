@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
-      integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
-      crossorigin=""></script>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
 <meta charset="utf-8">
-<title>Restaurant</title>
+<title><%= restaurant[0].name%></title>
 <style>
   /* Always set the map height explicitly to define the size of the div
    * element that contains the map. */
@@ -27,22 +24,7 @@
 <script>
 function goBack() {window.history.back();}
 </script>
-<script>
-function loadMap ()
-{
-  var myLatLng = {lat: 456, lng: 123};
-  /*var myLatLng = new google.maps.LatLng({lat: 456, lng: 123});
-  var map = new google.maps.Map(document.getElementById("map"),{
-        zoom: 18,
-        center: myLatLng
-  });
-  var marker = new google.maps.Marker({
-     position: myLatLng,
-     map: map,
-     title: '87 Restaurant'
-  });*/
-}
-</script>
+
 <script async defer
 src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkfp0OSPZ0fl8ZF3a0tea-mp36-mp_8b8&callback=loadMap"></script>
 <div class="w3-container w3-teal">
@@ -73,7 +55,7 @@ src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkfp0OSPZ0fl8ZF3a0tea-mp3
         <a href="/gmap?lat=<%= restaurant[0].address.coord.lat%>&lon=<%= restaurant[0].address.coord.lon%>">Map</a>
 
         <div class="w3-container">
-        <a href="/rate?_id=<%= restaurant[0]._id%>" style="text-decoration: none">
+        <a href="/rate?_id=<%= restaurant[0]._id%>&<%= restaurant[0].name%>" style="text-decoration: none">
             <button class="w3-btn w3-section w3-teal w3-ripple">Rate</button>
         </a>
         <a href="/change?_id=<%= restaurant[0]._id%>" style="text-decoration: none">
@@ -83,9 +65,7 @@ src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkfp0OSPZ0fl8ZF3a0tea-mp3
           <button class="w3-btn w3-section w3-teal w3-ripple">Delete</button>
         </a>
         <button class="w3-btn w3-section w3-teal w3-ripple" onclick="goBack()">Go Back</button>
-        </div> 
- 
-      
+        </div>    
 </body>
 
 </html>

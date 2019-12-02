@@ -11,27 +11,27 @@
    </head>
 
    <body>
-      <div id = "map" style = "width: 900px; height: 580px"></div>
-      <script>
-         // Creating map options
-         var mapOptions = {
-            center: [<%=lat%>,<%=lon%>],
-            zoom: <%=zoom%>
-         }
-         
-         // Creating a map object
-         var map = new L.map('map', mapOptions);
-         
-         // Creating a Layer object
-         var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-         
-         // Adding layer to the map
-         map.addLayer(layer);
-         // Creating a marker
-         var marker = L.marker([<%=lat%>,<%=lon%>]);
-         // Adding marker to the map
-         marker.addTo(map);
-      </script>
-   </body>
-   
+    <div id = "map" style = "width: 900px; height: 580px"></div>
+    <script>
+       // Creating map options
+       var mapOptions = {
+          center: [<%=lat%>,<%=lon%>],
+          zoom: <%=zoom%>
+       }
+       
+       // Creating a map object
+       var map = new L.map('map', mapOptions);
+       
+       // Creating a Layer object
+       var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+       
+       // Adding layer to the map
+       map.addLayer(layer);
+       // Creating a marker
+       var marker = L.marker([<%=lat%>,<%=lon%>]);
+       // Adding marker to the map
+       marker.addTo(map);
+    </script>
+ </body>
+ 
 </html>
