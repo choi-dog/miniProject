@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+      integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+      crossorigin=""></script>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
 <meta charset="utf-8">
-<title>87 Restaurant</title>
+<title>Restaurant</title>
 <style>
   /* Always set the map height explicitly to define the size of the div
    * element that contains the map. */
@@ -28,7 +31,7 @@ function goBack() {window.history.back();}
 function loadMap ()
 {
   var myLatLng = {lat: 456, lng: 123};
-  //var myLatLng = new google.maps.LatLng({lat: 456, lng: 123});
+  /*var myLatLng = new google.maps.LatLng({lat: 456, lng: 123});
   var map = new google.maps.Map(document.getElementById("map"),{
         zoom: 18,
         center: myLatLng
@@ -37,7 +40,7 @@ function loadMap ()
      position: myLatLng,
      map: map,
      title: '87 Restaurant'
-  });
+  });*/
 }
 </script>
 <script async defer
@@ -67,20 +70,22 @@ src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkfp0OSPZ0fl8ZF3a0tea-mp3
             <label>Created by: </label><%= restaurant[0].owner %></p>
             <p>
         </div>
-        <a href="/gmap?lat=456&lon=123&title=87 Restaurant">Map</a>
+        <a href="/gmap?lat=<%= restaurant[0].address.coord.lat%>&lon=<%= restaurant[0].address.coord.lon%>">Map</a>
 
         <div class="w3-container">
-        <a href="/rate?_id=5de248daeee16a00785a4d0f&ampname=87 Restaurant" style="text-decoration: none">
+        <a href="/rate?_id=<%= restaurant[0]._id%>" style="text-decoration: none">
             <button class="w3-btn w3-section w3-teal w3-ripple">Rate</button>
         </a>
         <a href="/change?_id=<%= restaurant[0]._id%>" style="text-decoration: none">
           <button class="w3-btn w3-section w3-teal w3-ripple">Edit</button>
         </a>
-        <a href="/remove?_id=5de248daeee16a00785a4d0f" style="text-decoration: none">
+        <a href="/remove?_id=<%= restaurant[0]._id%>" style="text-decoration: none">
           <button class="w3-btn w3-section w3-teal w3-ripple">Delete</button>
         </a>
         <button class="w3-btn w3-section w3-teal w3-ripple" onclick="goBack()">Go Back</button>
-        </div>    
+        </div> 
+ 
+      
 </body>
 
 </html>
