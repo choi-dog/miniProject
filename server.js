@@ -115,7 +115,7 @@ app.post('/login', (req,res) => {
         if(err) throw err;
         console.log("wrong password");
         res.end();
-      }else{restaurant.
+      }else{
         console.log("login successful!");
         req.session.authenticated = true;
         req.session.id = userArray.name;
@@ -258,12 +258,14 @@ app.post('/fileupload', (req,res) => {
         new_r['name'] = name;
         new_r['borough'] = borough;
         new_r['cuisine'] = cuisine;
-        new_r['address'] = {street,building,coord:{lon,lat}};
+        new_r['address'] = {street,building,zipcode,coord:{lon,lat}};
         new_r['street'] = street;
         new_r['building'] = building;
+        new_r['zipcode'] = zipcode;
         new_r['lon'] = lon;
         new_r['lat'] = lat;
         new_r['owner'] = req.session.id;
+        console.log(req.session.id);
         new_r['mimetype'] = mimetype;
         new_r['image'] = new Buffer.from(data).toString('base64');
         insertRestaurant(db,new_r,(result) => {
@@ -312,30 +314,6 @@ app.get('/change', (req, res) => {
   });
 });
 });
-app.post('/search', (req, res) => {    
-  let client = new MongoClient(mongourl);
-  client.connect((err) => {
-    try {
-      assert.equal(err,null);
-    } catch (err) {
-      res.status(500).end("MongoClient connect() failed!");
-    }      
-    console.log('Connected to MongoDB');
-    const db = client.db(dbName);
-    let criteria = {};
-    criteria['name'] = req.query.name;
-    findRestaurant(db,criteria,(restaurant) => {
-      client.close();
-      console.log('Disconnected MongoDB');
-      console.log('restaurant returned = ' + restaurant.length);
-      res.render("search.ejs",{
-      restaurant:restaurant
-      })   
-  });
-});
-});
-
-
 app.post('/change', (req,res) => {
   let form = new formidable.IncomingForm();
   form.parse(req, (err, fields, files) => {
@@ -395,37 +373,30 @@ app.post('/change', (req,res) => {
           res.status(500).end("MongoClient connect() failed!");
         }
         const db = client.db(dbName);
-        /*let new_r = {};
-        new_r['name'] = name;
-        new_r['borough'] = borough;
-        console.log(borough);
-        new_r['cuisine'] = cuisine;
-        new_r['address'] = {street,building,coord:{lon,lat}};
-        new_r['street'] = street;
-        new_r['building'] = building;
-        new_r['lon'] = lon;
-        new_r['lat'] = lat;
-        new_r['owner'] = req.session.id;
-        new_r['mimetype'] = mimetype;
-        new_r['image'] = new Buffer.from(data).toString('base64');
-        */
         let criteria = {};
         criteria['_id'] = ObjectID(req.query._id);
-          db.collection('restaurant2').updateOne(
+        //let idtodelete = ObjectID(req.query._id);
+        //console.log(idtodelete);
+        db.collection('restaurant2').updateOne(
             criteria,
-            {$set:{'name':name,'borough':borough,
+            {$set:{
+            'name':name,'borough':borough,
+            'address.zipcode':zipcode, 'owner':req.session.id,
             'cuisine':cuisine,'address.street':street,
             'address.building':building,'address.coord.lon':lon,
             'address.coord.lat':lat,'mimetype':mimetype,
             'image':new Buffer.from(data).toString('base64')}},
-          (err,result) =>{
+          {upsert:true},(err,result) =>{
               if(err){
                 return console.log(err);
               }
               console.log(JSON.stringify(result));
-              console.log('Update Succeed!');
-              
+              console.log('Update Succeed!');              
           });
+          //db.collection('restaurant2').deleteOne({_id:idtodelete},function(err,results){
+          //  if(err) throw err;
+          //  console.log("1 document deleted");
+          //}); 
           client.close();
           res.redirect('/read');
             //{$set:{"image":new Buffer.from(data).toString('base64')}},
@@ -442,29 +413,31 @@ app.post('/change', (req,res) => {
               console.log('Update failed!!'); 
             }*/
              
-        });
-      
-        //console.log("Post Updated successfully");
-        
-      
-        /*updateRestaurant(db,new_r,(result) => {
-          client.close();
-          res.redirect('/read');
-        });*/
-      
+        });  
     });
   });
 });
 
-/*unction updateRestaurant(db,r,callback) {
-  db.collection('restaurant2').updatetOne({ _id: ObjectID(req.query._id)},r,function(err,result) {
-    assert.equal(err,null);
-    console.log("insert was successful!");
-    console.log(JSON.stringify(result));
-    callback(result);
-  });
-}*/
-app.get('/remove', (req, res) => {    
+app.get('/remove',(req,res) => {
+  let client = new MongoClient(mongourl);
+      client.connect((err) => {
+        try {
+          assert.equal(err,null);
+        } catch (err) {
+          res.status(500).end("MongoClient connect() failed!");
+        }
+        const db = client.db(dbName);
+        let criteria = {};
+        criteria['_id'] = ObjectID(req.query._id);
+        db.collection('restaurant2').deleteOne(criteria,function(err,results){
+           if(err) throw err;
+           console.log("1 document deleted");
+        }); 
+        client.close();
+        res.render('remove');
+});
+});
+app.get('/rate', (req, res) => {    
   let client = new MongoClient(mongourl);
   client.connect((err) => {
     try {
@@ -477,73 +450,86 @@ app.get('/remove', (req, res) => {
     let criteria = {};
     criteria['_id'] = ObjectID(req.query._id);
     findRestaurant(db,criteria,(restaurant) => {
+      client.close();
+      console.log('Disconnected MongoDB');
+      console.log('restaurant returned = ' + restaurant.length);
       //let image = new Buffer.from(restaurant[0].image,'base64');     
       //console.log(restaurant[0].mimetype);
       //if (restaurant[0].mimetype.match(/^image/)) {
-      if(restaurant[0].owner == req.session.id){
-	   deleteRestaurants(db,() => {
-	   client.close();
-	   })  
-      }else{
-        res.end("You are not the onwer,please return.");
-      }
+      //if(restaurant[0].owner == req.session.id){
+      res.render("rate.ejs",{
+      restaurant:restaurant
+      })
+      //}else{
+      //  res.end("You are not the onwer,please return.");
+      //}
        
   });
 });
 });
-const deleteRestaurants = (db, callback) => {
-   db.collection('restaurant2').deleteOne(
-      { "_id" : restaurant[0]._id }, 
-      (err, results) => {
-         if (err) throw err;
-         console.log(results);
-         callback();
-      }
-   );
-};
-
-
-app.get('/rate', (req,res) => {
-	res.render("rate.ejs");
-});
 app.post('/rate', (req,res) => {
-    let client = new MongoClient(mongourl);
-    client.connect((err) => {
-        try {
-          assert.equal(err,null);
-        } catch (err) {
-          res.status(500).end("MongoClient connect() failed!");
+  //if (fields.score) {
+  //  var score = (fields.score.length > 0) ? fields.score : "n/a";
+  //  console.log(`score = ${score}`);
+  //}
+  score = req.body.score;
+  console.log(score);
+  let client = new MongoClient(mongourl,{ useNewUrlParser: true });
+  client.connect((err) => {
+      try {
+        assert.equal(err,null);
+      } catch (err) {
+        res.status(500).end("MongoClient connect() failed!");
+      }
+      const db = client.db(dbName);
+      let criteria = {};
+      criteria['_id'] = ObjectID(req.query._id);
+      let new_r = {};
+      user = req.session.id;
+      new_r['grades'] = {user,score};
+      new_r['user'] = user;
+      console.log(user);
+      new_r['score'] = score;
+      let cursor = db.collection('restaurant2').find(
+      { '_id': ObjectID(req.query._id)});
+       cursor.forEach((doc) =>{ 
+       if (err) {
+         throw err;
+        } 
+        let docs = JSON.stringify(doc);
+        if(docs.grades != null){
+           if(docs.grades.user == req.session.id){
+          console.log('Rate exists.');
+          res.write("You're already rated this restaurant, please return.");
+          res.end();
         }
-        const db = client.db(dbName);
-        let new_r = {};
-        new_r['rate'] = req.body.rate
-        new_r['user'] = req.session.id
-        db.collection('restaurant2').rate.count({ user: req.session.id })
-        .then((count) => {
-          if (count > 0) {
-            console.log('Username exists.');
-            res.write("You rated already, please return.");
-            res.end();
-          } else {
-            console.log('Username does not exist.');
-            insertRate(db,new_r,(result) => {
-              client.close();
-              res.status(200).end('User was inserted into MongoDB!');
-            });res.redirect('/read');
-          }
-        });
-
-});
-});
-function insertRate(db,r,callback) {  
-  db.collection('restaurant2').rate.insertOne(r,function(err,result) {
-      assert.equal(err,null);
-      console.log("insert was successful!");
-      console.log(result);
-      callback(result);
+        }else {
+          console.log('Rate does not exist.');
+          db.collection('restaurant2').updateOne(
+            criteria,
+            {$set:{
+              'grades.user': req.session.id,'grades.score':score}},
+          (err,result) =>{
+              if(err){
+                return console.log(err);
+              }
+              console.log(JSON.stringify(result));
+              console.log('Update Succeed!');              
+          });
+          };res.render('/display');
+        }
+  )});
     });
-  }
 
+
+/*function insertRate(db,r,callback) {  
+db.collection('restaurant2').updateOne(r,function(err,result) {
+    assert.equal(err,null);
+    console.log("insert was successful!");
+    console.log(result);
+    callback(result);
+  });
+}*/
 app.get("/gmap", (req,res) => {
 	res.render("gmap.ejs", {
 		lat:req.query.lat,
@@ -552,38 +538,9 @@ app.get("/gmap", (req,res) => {
 	});
 	res.end();
 });
-app.get('/restaurant/:name/:borough/:cuisine', function(req,res) {
-	let r = new Restful(String(req.params.name), Number(req.params.borough), Number(req.params.cuisine));
-	if (req.headers['accept'] == 'application/json') {		
-		res.status(200).json(r);
-	} else {
-		res.status(200).render('result',{result:r});
-	}
-});
-class Restful {
-	constructor(n,b,c) {
-		this.name = n;
-		this.borough = b;
-		this.cuisine = c;
-	}
-}
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.post('/restaurant', (req,res) => {
-    res.status(200).write('Recived POST request\n');
-    res.write(`Request body: ${JSON.stringify(req.body)}\n`);
-    res.write(`name: ${req.body.name}\n`);
-    res.write(`borough: ${req.body.borough}\n`);
-    res.end(`cuisine: ${req.body.cuisine}\n`);
-});
-
-
 app.get('/logout', (req,res) => {
 	req.session = null;
 	res.redirect('/');
 });
 
-app.listen(3000, () => {
-    console.log(`App running at http://localhost:3000`)
-  })
+app.listen(process.env.PORT || 3000);
