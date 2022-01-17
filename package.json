@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "dependencies": {
         "express": "*",
-        "mongodb": "3.1",
+        "mongodb": ">=3.1.13",
         "ejs": "*",
         "cookie-session": "*",
         "body-parser": "*",
